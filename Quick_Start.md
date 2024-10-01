@@ -2,9 +2,19 @@
 
 **Objective**: This document provides a stepwise guide for connecting to SLURM.
 
-> **Note**: In order to connect, please make sure to connect to **USF VPN**.
+**Note**: In order to connect, please make sure to connect to **USF VPN**.
 
 ---
+## Accounts
+-> Please note: CIRCE is for research-related use only.
+To request an account on CIRCE, please send an email (from your official USF email address) to rc-help@usf.edu with the subject "CIRCE Account Request". In this email, please also provide the following info:
+
+- **Faculty Sponsor Full Name:**
+- **Faculty Sponsor Department:**
+- **Faculty Sponsor USF Email Address:**
+
+## Connecting & Accessing
+-- **To connect to CIRCE, you will need to use an SSH client or utilize the CIRCE Desktop Environment.**
 
 ## Connecting via SSH
 
