@@ -118,6 +118,46 @@ Nodes=mdc-1057-13-[9-13],mdc-1057-18-[1-4],mdc-1057-13-8
   - **mdc-1057-18-[1-4]**: Nodes numbered 1 to 4 on this system.
   - **mdc-1057-13-8**: Node 8.
 
+## Types of Nodes in Computing Clusters
+
+#### 1. **Login Nodes**:
+   - **Purpose**: These nodes are used for users to log into the system, compile programs, submit jobs, and perform light preparatory tasks. Users don't run intensive computations on these nodes.
+   - **Example**: Users connect to the login node to interact with the cluster, but computation is submitted to compute nodes.
+
+#### 2. **Compute Nodes**:
+   - **Purpose**: These are the nodes where the actual computations or job processing happens. When a job is submitted, it runs on compute nodes.
+   - **Characteristics**: 
+     - Typically have a large number of CPUs and GPUs.
+     - Optimized for high-performance tasks.
+   - **Example**: A job requesting several cores or GPUs will run on these nodes.
+
+#### 3. **Master Nodes (Head Nodes)**:
+   - **Purpose**: The central node that manages the cluster and handles scheduling, job management, and monitoring. It distributes tasks to compute nodes.
+   - **Characteristics**: 
+     - High memory for job scheduling and cluster management.
+     - Doesn’t usually perform heavy computation itself.
+   - **Example**: SLURM or other scheduling software often runs on the master node.
+
+#### 4. **GPU Nodes**:
+   - **Purpose**: These nodes are equipped with one or more Graphics Processing Units (GPUs) for tasks requiring high-performance parallel processing.
+   - **Characteristics**: 
+     - Commonly used for AI, machine learning, or high-end graphical computations.
+     - GPUs allow faster processing for parallel workloads.
+   - **Example**: TensorFlow or PyTorch jobs may use GPU nodes for deep learning.
+
+#### 5. **Data Nodes**:
+   - **Purpose**: Nodes designed specifically for handling large volumes of data, such as reading from or writing to storage devices.
+   - **Characteristics**: 
+     - Optimized for I/O-heavy operations.
+     - Often connected to storage arrays or large disk systems.
+   - **Example**: Nodes used for data preprocessing or storing large datasets in distributed computing environments.
+
+#### 6. **Storage Nodes**:
+   - **Purpose**: Nodes dedicated to handling and managing storage. These nodes manage access to large volumes of data stored in distributed file systems like Lustre or HDFS.
+   - **Characteristics**: 
+     - Large storage capacity and fast I/O operations.
+   - **Example**: Handling distributed storage systems like HDFS in big data processing.
+
 ## 7. **Job Scheduling and Priority:**
 PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=NO
 - **PriorityJobFactor=1**: Jobs submitted to this partition have a neutral priority factor (no special prioritization).
@@ -151,6 +191,37 @@ DefMemPerCPU=512 MaxMemPerNode=UNLIMITED
 > **Note**: Here we are taking an example to run a Data Analysis by loading spark.
 ## a. **Writing a JOB(.sh file):**
 ![image](https://github.com/user-attachments/assets/e98f6294-f3b7-4029-8053-0eb61ca313c9)
+
+# SLURM Batch Script Explanation
+
+1. **`#!/bin/bash`**: 
+   - The shebang line that specifies the script should be run using the Bash shell.
+
+2. **`#SBATCH --job-name=data_analysis_1`**:
+   - Defines the job name as `data_analysis_1`. This helps identify the job when checking the job queue or status.
+
+3. **`#SBATCH --partition=muma_2021`**:
+   - Submits the job to the specified partition or queue called `muma_2021`. Different partitions may represent various resource levels or priorities.
+
+4. **`#SBATCH --nodes=7`**:
+   - Requests 7 compute nodes for this job.
+
+5. **`#SBATCH --ntasks-per-node=8`**:
+   - Specifies 8 tasks per node. This usually means 8 CPU cores will be used on each of the requested nodes.
+
+6. **`#SBATCH --mem=128000`**:
+   - Allocates 128 GB (128,000 MB) of memory for this job.
+
+7. **`#SBATCH --time=1:00:00`**:
+   - Sets the maximum job runtime to 1 hour (in the format `hours:minutes:seconds`).
+
+8. **`#SBATCH --output=analysis_%j.out`**:
+   - Directs the job's output to a file named `analysis_<job_id>.out`, where `%j` is a placeholder for the SLURM job ID.
+
+9. **`module load spark`**:
+   - Loads the `spark` module, making Apache Spark available for use in the job.
+
+
 ## b. **Submitting a JOB:**
 - **sbatch job_script.sh**
 
