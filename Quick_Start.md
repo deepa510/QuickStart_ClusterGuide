@@ -14,7 +14,7 @@ To request an account on CIRCE, please send an email (from your official USF ema
 - **Faculty Sponsor USF Email Address:**
 
 ## Connecting & Accessing
--- **To connect to CIRCE, you will need to use an SSH client or utilize the CIRCE Desktop Environment.**
+- **To connect to CIRCE, you will need to use an SSH client or utilize the CIRCE Desktop Environment.**
 
 ## Connecting via SSH
 
@@ -27,6 +27,10 @@ The following information will be needed to connect via SSH:
 ### SSH Clients for Windows
 
 - **PuTTY**: [PuTTY Download Link](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
+
+### SSH Clients for Mac OSX
+
+- **OSX SSH Tutorial**: ([https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html](https://osxdaily.com/2017/04/28/howto-ssh-client-mac/))
 
 ## Check Available Partitions:
 **sinfo** -This command will display information about partitions, nodes, and their status.
