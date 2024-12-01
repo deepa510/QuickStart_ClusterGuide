@@ -188,42 +188,264 @@ DefMemPerCPU=512 MaxMemPerNode=UNLIMITED
 - **MaxMemPerNode=UNLIMITED**: There is no upper memory limit per node; jobs can use as much memory as is physically available on the node.
 
 ## HOW to run a JOB in Cluster:
-> **Note**: Here we are taking an example to run a Data Analysis by loading spark.
-## a. **Writing a JOB(.sh file):**
-![image](https://github.com/user-attachments/assets/e98f6294-f3b7-4029-8053-0eb61ca313c9)
 
-# SLURM Batch Script Explanation
+Before running a job we need to create conda environment 
+************************ Instructions on installing Miniconda3 *************************************
+    cd $HOME
+    wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    chmod +x Miniconda3-latest-Linux-x86_64.sh
+    ./Miniconda3-latest-Linux-x86_64.sh
+        when the installer asks “Do you wish the installer to initialize Miniconda3 by running conda init?”, please answer "yes"
+    log-out of CIRCE/RRA, then log back in
+    which conda pip
+        make sure it returns with: ~/miniconda3/bin/conda and ~/miniconda3/bin/pip
+    pip install --upgrade pip
+    conda update --all -y
+    conda install -y anaconda
 
-1. **`#!/bin/bash`**: 
-   - The shebang line that specifies the script should be run using the Bash shell.
+Once Conda is installed, you can then create virtual environments for each package (or combination of packages) that you may need, including Tensorflow, Keras, OpenCV, gurobipy, numpy, etc.
 
-2. **`#SBATCH --job-name=data_analysis_1`**:
-   - Defines the job name as `data_analysis_1`. This helps identify the job when checking the job queue or status.
+Once your environment is ready we can proceed to begin activating and installing packages 
+1.1. Connect to Cluster
 
-3. **`#SBATCH --partition=muma_2021`**:
-   - Submits the job to the specified partition or queue called `muma_2021`. Different partitions may represent various resource levels or priorities.
+![image](https://github.com/user-attachments/assets/b4e6d187-25a7-44ca-bac7-acabe7bfa690)
+1.2. Request GPU Resource
+srun -p muma_2021 -q muma21 --gres=gpu:1 --pty /bin/bash
+![image](https://github.com/user-attachments/assets/e99fda59-aece-44e2-8f7e-500989924858)
 
-4. **`#SBATCH --nodes=7`**:
-   - Requests 7 compute nodes for this job.
+1.3. Activate Environment
+conda activate myenv
+![image](https://github.com/user-attachments/assets/d18c8043-aff5-4b63-bec7-3db9d1d2de84)
 
-5. **`#SBATCH --ntasks-per-node=8`**:
-   - Specifies 8 tasks per node. This usually means 8 CPU cores will be used on each of the requested nodes.
+1.4. Create Working Directory
+mkdir pytorch_benchmark
+cd pytorch_benchmark
+![image](https://github.com/user-attachments/assets/c783b3e4-301c-4e67-afed-9f61548f7f3f)
 
-6. **`#SBATCH --mem=128000`**:
-   - Allocates 128 GB (128,000 MB) of memory for this job.
+2. Verify GPU Setup
+### 2.1. Check GPU Status
+```bash
+nvidia-smi
+```
+![image](https://github.com/user-attachments/assets/268c1391-d2de-44e4-887d-b6055c37c08a)
 
-7. **`#SBATCH --time=1:00:00`**:
-   - Sets the maximum job runtime to 1 hour (in the format `hours:minutes:seconds`).
+Expected output should show:
+- NVIDIA L40S GPU
+- Available memory
+- CUDA version
 
-8. **`#SBATCH --output=analysis_%j.out`**:
-   - Directs the job's output to a file named `analysis_<job_id>.out`, where `%j` is a placeholder for the SLURM job ID.
+### 2.2. Install Required Package
+```bash
+pip install prettytable
+```
+![image](https://github.com/user-attachments/assets/3b5b1f91-4686-4bfb-ac46-838abef52810)
 
-9. **`module load spark`**:
-   - Loads the `spark` module, making Apache Spark available for use in the job.
+
+## 3. Create Benchmark Script
+
+### 3.1. Create Python File
+```bash
+vi benchmark.py
+```
+
+### 3.2. Add Benchmark Code
+```python
+import torch
+import torch.nn as nn
+import time
+import numpy as np
+from prettytable import PrettyTable
+
+class SimpleNN(nn.Module):
+    def __init__(self, input_size=1000, hidden_size=100, output_size=10):
+        super(SimpleNN, self).__init__()
+        self.layer1 = nn.Linear(input_size, hidden_size)
+        self.relu = nn.ReLU()
+        self.layer2 = nn.Linear(hidden_size, output_size)
+    
+    def forward(self, x):
+        x = self.layer1(x)
+        x = self.relu(x)
+        x = self.layer2(x)
+        return x
+
+def benchmark_matrix_ops(size, device, num_iterations=10):
+    # Matrix multiplication benchmark
+    a = torch.randn(size, size, device=device)
+    b = torch.randn(size, size, device=device)
+    
+    # Warmup
+    for _ in range(5):
+        _ = torch.mm(a, b)
+    
+    if device == 'cuda':
+        torch.cuda.synchronize()
+    
+    start_time = time.time()
+    for _ in range(num_iterations):
+        _ = torch.mm(a, b)
+        if device == 'cuda':
+            torch.cuda.synchronize()
+    end_time = time.time()
+    
+    return (end_time - start_time) / num_iterations
+
+def benchmark_neural_network(batch_size, input_size, device, num_iterations=10):
+    # Neural network forward pass benchmark
+    model = SimpleNN(input_size=input_size).to(device)
+    data = torch.randn(batch_size, input_size, device=device)
+    
+    # Warmup
+    for _ in range(5):
+        _ = model(data)
+    
+    if device == 'cuda':
+        torch.cuda.synchronize()
+    
+    start_time = time.time()
+    for _ in range(num_iterations):
+        _ = model(data)
+        if device == 'cuda':
+            torch.cuda.synchronize()
+    end_time = time.time()
+    
+    return (end_time - start_time) / num_iterations
+
+def run_benchmarks():
+    # Initialize results table
+    table = PrettyTable()
+    table.field_names = ["Operation", "CPU Time (ms)", "GPU Time (ms)", "Speedup (x)"]
+    
+    # Matrix multiplication benchmarks with different sizes
+    sizes = [1000, 2000, 4000]
+    for size in sizes:
+        print(f"\nRunning matrix multiplication benchmark with size {size}x{size}...")
+        cpu_time = benchmark_matrix_ops(size, 'cpu') * 1000  # Convert to ms
+        gpu_time = benchmark_matrix_ops(size, 'cuda') * 1000  # Convert to ms
+        speedup = cpu_time / gpu_time
+        table.add_row([f"Matrix Mult ({size}x{size})", 
+                      f"{cpu_time:.2f}", 
+                      f"{gpu_time:.2f}", 
+                      f"{speedup:.2f}"])
+    
+    # Neural network benchmarks with different batch sizes
+    input_size = 1000
+    batch_sizes = [64, 128, 256]
+    for batch_size in batch_sizes:
+        print(f"\nRunning neural network benchmark with batch size {batch_size}...")
+        cpu_time = benchmark_neural_network(batch_size, input_size, 'cpu') * 1000
+        gpu_time = benchmark_neural_network(batch_size, input_size, 'cuda') * 1000
+        speedup = cpu_time / gpu_time
+        table.add_row([f"Neural Network (batch={batch_size})", 
+                      f"{cpu_time:.2f}", 
+                      f"{gpu_time:.2f}", 
+                      f"{speedup:.2f}"])
+    
+    # Print summary
+    print("\nBenchmark Results:")
+    print(table)
+    
+    # Save results to file
+    with open('benchmark_results.txt', 'w') as f:
+        f.write("GPU vs CPU Benchmark Results\n")
+        f.write("==========================\n")
+        f.write("\nSystem Information:\n")
+        f.write(f"PyTorch Version: {torch.__version__}\n")
+        f.write(f"CUDA Available: {torch.cuda.is_available()}\n")
+        if torch.cuda.is_available():
+            f.write(f"GPU Device: {torch.cuda.get_device_name(0)}\n")
+        f.write("\nDetailed Results:\n")
+        f.write(str(table))
+
+def main():
+    print("Starting GPU vs CPU Performance Benchmark")
+    print("========================================")
+    print(f"\nPyTorch Version: {torch.__version__}")
+    print(f"CUDA Available: {torch.cuda.is_available()}")
+    if torch.cuda.is_available():
+        print(f"GPU Device: {torch.cuda.get_device_name(0)}")
+    
+    # Clear cache before starting
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    
+    try:
+        run_benchmarks()
+    except Exception as e:
+        print(f"Error during benchmark: {e}")
+    finally:
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+if __name__ == "__main__":
+    main()
+```
+
+## 4. Run Benchmark
+
+### 4.1. Execute Script
+```bash
+python benchmark.py
+```
+
+### 4.2. Expected Results
+You should see output similar to:
+```
+Starting GPU vs CPU Performance Benchmark
+========================================
+PyTorch Version: 2.4.1+cu121
+CUDA Available: True
+GPU Device: NVIDIA L40S
+
+Running matrix multiplication benchmark with size 1000x1000...
+Running matrix multiplication benchmark with size 2000x2000...
+Running matrix multiplication benchmark with size 4000x4000...
+Running neural network benchmark with batch size 64...
+Running neural network benchmark with batch size 128...
+Running neural network benchmark with batch size 256...
+
+Benchmark Results:
++----------------------------+---------------+---------------+-------------+
+|         Operation          | CPU Time (ms) | GPU Time (ms) | Speedup (x) |
++----------------------------+---------------+---------------+-------------+
+|  Matrix Mult (1000x1000)   |     12.75     |      0.09     |    139.53   |
+|  Matrix Mult (2000x2000)   |     98.93     |      0.41     |    240.54   |
+|  Matrix Mult (4000x4000)   |     825.83    |      2.82     |    292.49   |
+| Neural Network (batch=64)  |      0.30     |      0.09     |     3.21    |
+| Neural Network (batch=128) |      0.40     |      0.09     |     4.36    |
+| Neural Network (batch=256) |      0.63     |      0.09     |     7.02    |
++----------------------------+---------------+---------------+-------------+
+```
+
+## 5. Key Points to Note
+
+### 5.1. Matrix Multiplication Results
+- Shows dramatic speedup with larger matrices
+- 1000x1000: ~140x speedup
+- 2000x2000: ~240x speedup
+- 4000x4000: ~290x speedup
+
+### 5.2. Neural Network Results
+- Speedup increases with batch size
+- Ranges from 3x to 7x speedup
+- Shows GPU efficiency with parallel processing
+
+### 5.3. Performance Factors
+- Matrix size significantly impacts speedup
+- Larger computations show greater GPU advantage
+- Results saved in 'benchmark_results.txt' for reference
+
+## 6. Cleanup
+
+### 6.1. Exit Session
+```bash
+exit
+```
+
+### 6.2. For New Session
+Repeat steps from Section 1 to start fresh   
 
 
-## b. **Submitting a JOB:**
-- **sbatch job_script.sh**
 
 
 
