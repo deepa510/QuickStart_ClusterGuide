@@ -5,6 +5,27 @@
 **Note**: In order to connect, please make sure to connect to **USF VPN**.
 
 ---
+## Steps to Connect **USF VPN** ( Skip if already connected to USF network/wifi )
+
+### Connecting to the University of South Florida (USF) VPN with GlobalProtect
+
+#### Steps to Connect:
+
+1. Open the GlobalProtect app.
+2. Enter `vpn.usf.edu` and click **Connect**.
+3. Enter your **NetID** and **password**, then click **Connect**.
+
+---
+
+#### For Mac Users:
+
+1. Log in to the GlobalProtect portal at [vpn.usf.edu](https://vpn.usf.edu).
+2. Navigate to the **app download page**.
+3. Download the GlobalProtect app.
+4. Run the downloaded software and the **GlobalProtect Installer**.
+5. Complete the app setup using the **GlobalProtect Installer**.
+
+---
 ## Accounts
 -> Please note: CIRCE is for research-related use only.
 To request an account on CIRCE, please send an email (from your official USF email address) to rc-help@usf.edu with the subject "CIRCE Account Request". In this email, please also provide the following info:
@@ -267,7 +288,7 @@ vi benchmark.py
 ```
 
 ### 3.2. Add Benchmark Code
-This is a sample code that is a Python script benchmarks the performance of matrix multiplication and neural network forward passes on both CPU and GPU using PyTorch, comparing execution times and calculating speedups. The results are displayed in a formatted table for analysis.
+This is a sample code that is a Python script which benchmarks the performance of matrix multiplication and neural network forward passes on both CPU and GPU using PyTorch, comparing execution times and calculating speedups. The results are displayed in a formatted table for analysis.
 
 ```python
 import torch
