@@ -189,40 +189,58 @@ DefMemPerCPU=512 MaxMemPerNode=UNLIMITED
 
 ## HOW to run a JOB in Cluster:
 
-Before running a job we need to create conda environment 
+### Before running a job we need to create conda environment 
+---
 ************************ Instructions on installing Miniconda3 *************************************
-    cd $HOME
-    wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
-    chmod +x Miniconda3-latest-Linux-x86_64.sh
-    ./Miniconda3-latest-Linux-x86_64.sh
-        when the installer asks “Do you wish the installer to initialize Miniconda3 by running conda init?”, please answer "yes"
-    log-out of CIRCE/RRA, then log back in
-    which conda pip
-        make sure it returns with: ~/miniconda3/bin/conda and ~/miniconda3/bin/pip
-    pip install --upgrade pip
-    conda update --all -y
-    conda install -y anaconda
 
+```bash
+cd $HOME
+wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+chmod +x Miniconda3-latest-Linux-x86_64.sh
+./Miniconda3-latest-Linux-x86_64.sh
+when the installer asks:
+
+Do you wish the installer to initialize Miniconda3 by running conda init?
+please answer "yes"
+
+log-out of CIRCE/RRA, then log back in
+which conda pip
+Make sure it returns with:
+
+~/miniconda3/bin/conda
+~/miniconda3/bin/pip
+
+pip install --upgrade pip
+conda update --all -y
+conda install -y anaconda
 Once Conda is installed, you can then create virtual environments for each package (or combination of packages) that you may need, including Tensorflow, Keras, OpenCV, gurobipy, numpy, etc.
-
+```
 Once your environment is ready we can proceed to begin activating and installing packages 
-1.1. Connect to Cluster
+---
+## 1. Connect to Cluster
 
 ![image](https://github.com/user-attachments/assets/b4e6d187-25a7-44ca-bac7-acabe7bfa690)
-1.2. Request GPU Resource
+
+### 1.1 Request GPU Resource
+```bash
 srun -p muma_2021 -q muma21 --gres=gpu:1 --pty /bin/bash
+```
 ![image](https://github.com/user-attachments/assets/e99fda59-aece-44e2-8f7e-500989924858)
 
-1.3. Activate Environment
+### 1.2. Activate Environment
+```bash
 conda activate myenv
+```
 ![image](https://github.com/user-attachments/assets/d18c8043-aff5-4b63-bec7-3db9d1d2de84)
 
-1.4. Create Working Directory
+### 1.3. Create Working Directory
+```bash
 mkdir pytorch_benchmark
 cd pytorch_benchmark
+```
 ![image](https://github.com/user-attachments/assets/c783b3e4-301c-4e67-afed-9f61548f7f3f)
 
-2. Verify GPU Setup
+## 2. Verify GPU Setup
 ### 2.1. Check GPU Status
 ```bash
 nvidia-smi
@@ -249,6 +267,8 @@ vi benchmark.py
 ```
 
 ### 3.2. Add Benchmark Code
+This is a sample code that is a Python script benchmarks the performance of matrix multiplication and neural network forward passes on both CPU and GPU using PyTorch, comparing execution times and calculating speedups. The results are displayed in a formatted table for analysis.
+
 ```python
 import torch
 import torch.nn as nn
