@@ -25,6 +25,7 @@
 4. Run the downloaded software and the **GlobalProtect Installer**.
 5. Complete the app setup using the **GlobalProtect Installer**.
 
+Please refer to this PDF for more information - chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://www.usf.edu/research-innovation/documents/globalprotect-windows.pdf
 ---
 ## Accounts
 -> Please note: CIRCE is for research-related use only.
